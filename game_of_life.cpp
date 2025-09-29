@@ -4,12 +4,64 @@
 #include <string>
 #include <chrono>
 #include <cstdlib>
-#include <conio.h>
+
+#ifdef __linux__
+    #include <termios.h>
+    #include <unistd.h>
+    #include <fcntl.h>
+    #define LIMPIAR "clear"
+#else
+    #include <conio.h>
+    #define LIMPIAR "cls"
+#endif
+
 #include <thread>
 using namespace std;
 
 const char VIVO = 'x';
 const char MUERTO = '.';
+
+//====================
+// Funciones de teclado
+//====================
+#ifdef __linux__
+int kbhit_linux() {
+    termios oldt, newt;
+    int ch;
+    int oldf;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    if (ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+    return 0;
+}
+
+int getch_linux() {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+#endif
+//====================
 
 // cuenta los vecinos "vivos"
 int contarVecinos(const vector<vector<char>> &tablero, int x, int y)
@@ -59,7 +111,7 @@ void mostrar(const vector<vector<char>> &tablero)
 
   // limpiar pantalla
   // falta añadir compatibilidad para linux/mac
-  system("cls");
+  system(LIMPIAR);
 
   // fila a fila
   for (auto &fila : tablero)
@@ -225,15 +277,17 @@ int main()
     this_thread::sleep_for(chrono::milliseconds(50));
 
     // comprobar si se ha presionado una tecla
-    if (_kbhit())
-    {
-      char tecla = _getch();
-      // si se presiona espacio, salir del bucle
-      if (tecla == ' ')
-      {
-        break;
-      }
-    }
+    #ifdef __linux__
+        if (kbhit_linux()) {
+            char tecla = getch_linux();
+            if (tecla == ' ') break;
+        }
+    #else
+            if (_kbhit()) {
+                char tecla = _getch();
+                if (tecla == ' ') break;
+            }
+    #endif
   }
 
   // guardar grafico
