@@ -1,8 +1,8 @@
-# Juego de la Vida - C++
+# Game Of Life - C++
 
-Simulación del **Juego de la Vida** de Conway en C++.
+Simulación del **Conway's Game of life** en C++.
 
-## Cómo usar
+## How to
 
 1. Crear un archivo `config.txt` con el tablero inicial (`x` = vivo, `.` = muerto).
 2. Compilar:
@@ -26,3 +26,4 @@ g++ -o game_of_life game_of_life.cpp
 - Calcula la siguiente generación según las reglas de Conway.
 
 - Guarda un registro de celdas vivas en grafico.txt.
+
